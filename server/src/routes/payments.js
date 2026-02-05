@@ -34,12 +34,17 @@ router.post('/create', async (req, res) => {
         }
 
         // 2. Store as PENDING transaction
+        // Map payment type to transaction type
+        let transactionType = 'DEPOSIT'; // Default for FUND_POOL
+        if (type === 'PAY_EXPENSE') transactionType = 'EXPENSE';
+        if (type === 'REFUND_USER') transactionType = 'REFUND';
+
         const db = await getDb();
         await db.run(
             `INSERT INTO transactions 
             (event_id, user_id, type, amount, description, payment_reference, status, timestamp) 
             VALUES (?, ?, ?, ?, ?, ?, 'PENDING', CURRENT_TIMESTAMP)`,
-            eventId, userId, 'DEPOSIT', amount, 'Pending Payment', intentId
+            eventId, userId, transactionType, amount, `Pending ${type}`, intentId
         );
 
         console.log('[PaymentRoute] 📝 PENDING transaction created:', intentId);
@@ -102,16 +107,20 @@ router.post('/confirm', async (req, res) => {
                 'COMPLETED', 'Payment via Finternet', txn.id
             );
 
-            // Update Event Pool Balance
+            // Update Event Pool Balance based on transaction type
+            // DEPOSIT: Add to pool
+            // EXPENSE/REFUND: Deduct from pool
+            const balanceChange = txn.type === 'DEPOSIT' ? txn.amount : -txn.amount;
+
             await db.run(
                 'UPDATE events SET pool_balance = pool_balance + ? WHERE id = ?',
-                txn.amount, eventId
+                balanceChange, eventId
             );
 
             await db.run('COMMIT');
 
-            console.log(`[PaymentRoute] ✅ Success. Pool updated by ${txn.amount}`);
-            res.json({ success: true, amount: txn.amount });
+            console.log(`[PaymentRoute] ✅ Success. Type: ${txn.type}, Pool ${balanceChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(balanceChange)}`);
+            res.json({ success: true, amount: txn.amount, type: txn.type });
 
         } catch (dbErr) {
             await db.run('ROLLBACK');

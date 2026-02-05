@@ -106,70 +106,85 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         }
     };
 
-    const handleFund = async (e: React.FormEvent) => {
-        e.preventDefault();
+    // Unified Payment Function for all payment types
+    const initiatePayment = async (paymentData: {
+        amount: number;
+        userId: number;
+        type: 'FUND_POOL' | 'PAY_EXPENSE' | 'REFUND_USER';
+        description: string;
+    }) => {
         if (!eventId) return;
 
         setIsSubmitting(true);
         setPaymentStatus('initiating');
-        setPaymentMessage('Redirecting to payment...');
+        setPaymentMessage(`Redirecting to payment...`);
 
         try {
-            console.log('[Fund] Calling createPayment with:', {
-                amount: Number(fundAmount),
-                eventId: eventId,
-                userId: Number(fundUser),
-                type: 'FUND_POOL'
-            });
+            console.log(`[Payment] Initiating ${paymentData.type}:`, paymentData);
 
-            // New Finternet Flow
             const res = await createPayment({
-                amount: Number(fundAmount),
+                amount: paymentData.amount,
                 eventId: eventId,
-                userId: Number(fundUser),
-                type: 'FUND_POOL'
+                userId: paymentData.userId,
+                type: paymentData.type
             });
 
-            console.log('[Fund] Response received:', res);
+            console.log('[Payment] Response received:', res);
 
-            // Redirect to Finternet Payment URL
             if (res.intentId) {
                 // Store intent for confirmation on return
                 localStorage.setItem('pending_payment_intent', res.intentId);
                 localStorage.setItem('pending_event_id', eventId);
-                console.log('[Fund] Stored intentId:', res.intentId);
+                localStorage.setItem('pending_payment_type', paymentData.type);
+                console.log('[Payment] Stored intentId:', res.intentId);
 
                 if (res.paymentUrl) {
-                    console.log('[Fund] Redirecting to:', res.paymentUrl);
+                    console.log('[Payment] Redirecting to:', res.paymentUrl);
 
-                    // Close modal BEFORE redirect
+                    // Close any open modals
                     setShowFund(false);
-                    setPaymentStatus('pending');
-                    setPaymentMessage('Complete payment in the new tab');
+                    setShowExpense(false);
 
-                    // Clear form
-                    setFundAmount('');
-                    setFundUser('');
+                    setPaymentStatus('pending');
+                    setPaymentMessage(`Complete payment in the new tab`);
 
                     // Open payment in new tab
                     window.open(res.paymentUrl, '_blank');
-
                 } else {
                     setPaymentStatus('error');
                     setPaymentMessage('Payment URL not received from server');
                 }
             } else {
-                console.error('[Fund] No intentId in response:', res);
+                console.error('[Payment] No intentId in response:', res);
                 setPaymentStatus('error');
                 setPaymentMessage('Payment initialization failed');
             }
         } catch (err) {
-            console.error('[Fund] Funding error:', err);
+            console.error('[Payment] Error:', err);
             setPaymentStatus('error');
             setPaymentMessage('Payment failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const handleFund = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!eventId) return;
+
+        // Clear form
+        const amount = Number(fundAmount);
+        const userId = Number(fundUser);
+        setFundAmount('');
+        setFundUser('');
+
+        // Use unified payment function
+        await initiatePayment({
+            amount,
+            userId,
+            type: 'FUND_POOL',
+            description: `Fund Pool for Event ${eventId}`
+        });
     };
 
     const handleExpense = async (e: React.FormEvent) => {
@@ -179,20 +194,39 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             alert('Select at least one participant');
             return;
         }
-        try {
-            await addExpense(eventId, {
-                description: expDesc,
-                amount: Number(expAmount),
-                split_users: expSplits
-            });
-            setShowExpense(false);
-            setExpDesc('');
-            setExpAmount('');
-            setExpSplits([]);
-            fetchEvent(eventId);
-        } catch (err: any) {
-            alert('Expense failed: ' + (err.response?.data?.error || err.message));
+
+        // Get current user from localStorage
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+            alert('User not found');
+            return;
         }
+        const user = JSON.parse(userData);
+
+        // Store expense details for later processing
+        const amount = Number(expAmount);
+        const description = expDesc;
+        const splits = [...expSplits];
+
+        // Clear form
+        setExpDesc('');
+        setExpAmount('');
+        setExpSplits([]);
+
+        // Store expense metadata for processing after payment
+        localStorage.setItem('pending_expense_data', JSON.stringify({
+            description,
+            amount,
+            split_users: splits
+        }));
+
+        // Use Finternet payment gateway for expense
+        await initiatePayment({
+            amount,
+            userId: user.id,
+            type: 'PAY_EXPENSE',
+            description: `Expense: ${description}`
+        });
     };
 
     const toggleSplitUser = (uid: number) => {

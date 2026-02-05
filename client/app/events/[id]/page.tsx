@@ -202,7 +202,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
         );
     };
 
-    if (loading) return <div className="flex justify-center h-screen items-center"><Loader2 className="animate-spin h-10 w-10 text-emerald-600" /></div>;
+    if (loading) return <div className="flex justify-center h-screen items-center"><Loader2 className="animate-spin h-10 w-10 text-blue-600" /></div>;
     if (!event) return <div className="p-20 text-center text-slate-500">Event not found</div>;
 
     return (
@@ -210,7 +210,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
             {/* Header */}
             <div>
-                <Link href="/" className="text-slate-500 hover:text-emerald-600 flex items-center gap-1 mb-4 text-sm font-medium transition-colors">
+                <Link href="/" className="text-slate-500 hover:text-blue-600 flex items-center gap-1 mb-4 text-sm font-medium transition-colors">
                     <ArrowLeft className="h-4 w-4" /> Back to Dashboard
                 </Link>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -231,9 +231,9 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             {/* Payment Status Banner */}
             {paymentStatus !== 'idle' && (
                 <div className={`rounded-xl p-4 flex items-center gap-3 shadow-lg animate-in slide-in-from-top duration-300 ${paymentStatus === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' :
-                        paymentStatus === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
-                            paymentStatus === 'confirming' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
-                                'bg-amber-50 border border-amber-200 text-amber-800'
+                    paymentStatus === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+                        paymentStatus === 'confirming' ? 'bg-blue-50 border border-blue-200 text-blue-800' :
+                            'bg-amber-50 border border-amber-200 text-amber-800'
                     }`}>
                     {paymentStatus === 'success' && <CheckCircle className="h-5 w-5 flex-shrink-0" />}
                     {paymentStatus === 'error' && <AlertCircle className="h-5 w-5 flex-shrink-0" />}
@@ -263,19 +263,14 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             {/* Hero Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Pool Balance Hero */}
-                <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                    <div className="relative z-10">
-                        <p className="text-emerald-100 font-medium mb-1 flex items-center gap-2">
-                            <Wallet className="h-4 w-4" /> Pool Balance
-                        </p>
-                        <p className="text-4xl font-mono font-bold tracking-tight">
-                            ${event.pool_balance.toFixed(2)}
-                        </p>
-                        <p className="text-emerald-200 text-sm mt-4">Available for expenses</p>
-                    </div>
-                    <div className="absolute right-0 bottom-0 opacity-10 transform translate-y-4 translate-x-4">
-                        <Wallet className="h-32 w-32" />
-                    </div>
+                <div className="bg-white border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+                    <p className="text-blue-700 font-semibold mb-1 flex items-center gap-2 text-sm uppercase tracking-wide">
+                        <Wallet className="h-4 w-4" /> Pool Balance
+                    </p>
+                    <p className="text-5xl font-bold tracking-tight text-slate-900 mb-2">
+                        ${event.pool_balance.toFixed(2)}
+                    </p>
+                    <p className="text-slate-600 text-sm">Available for expenses</p>
                 </div>
 
                 {/* Quick Actions */}
@@ -331,7 +326,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-bold text-slate-900">Participants</h2>
-                        <button onClick={() => setShowAddUser(true)} className="text-sm font-medium text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                        <button onClick={() => setShowAddUser(true)} className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1">
                             <Plus className="h-4 w-4" /> Add New
                         </button>
                     </div>
@@ -404,40 +399,49 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
 
             {/* Modals - Cleaned UI */}
             {showFund && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-slate-900">Add Funds</h2>
-                            <button onClick={() => setShowFund(false)} className="text-slate-400 hover:text-slate-600">✕</button>
+                            <h2 className="text-2xl font-bold text-slate-900">Add Funds</h2>
+                            <button onClick={() => setShowFund(false)} className="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
                         </div>
-                        <form onSubmit={handleFund} className="space-y-4">
+                        <form onSubmit={handleFund} className="space-y-5">
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Who is paying?</label>
+                                <label className="block text-sm font-semibold text-slate-800 mb-2">Participant</label>
                                 <select
-                                    className="w-full border border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-emerald-500 outline-none bg-slate-50"
+                                    className="w-full border-2 border-slate-300 rounded-xl p-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white text-slate-900 font-medium"
                                     value={fundUser} onChange={e => setFundUser(e.target.value)} required
                                 >
-                                    <option value="">Select participant...</option>
+                                    <option value="">Select who is funding...</option>
                                     {event.participants.map((p: any) => (
                                         <option key={p.id} value={p.id}>{p.name}</option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Amount ($)</label>
+                                <label className="block text-sm font-semibold text-slate-800 mb-2">Amount</label>
                                 <div className="relative">
-                                    <span className="absolute left-3 top-3 text-slate-400">$</span>
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-baseline gap-1">
+                                        <span className="text-3xl font-bold text-slate-700">$</span>
+                                        <span className="text-sm font-semibold text-slate-500 uppercase">USD</span>
+                                    </div>
                                     <input
-                                        type="number" step="0.01" className="w-full border border-slate-300 rounded-xl p-3 pl-7 focus:ring-2 focus:ring-emerald-500 outline-none font-mono text-lg"
-                                        value={fundAmount} onChange={e => setFundAmount(e.target.value)} required placeholder="0.00"
+                                        type="number"
+                                        step="0.01"
+                                        className="w-full border-2 border-slate-300 rounded-xl p-4 pl-24 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none font-mono text-3xl font-bold text-slate-900"
+                                        value={fundAmount}
+                                        onChange={e => setFundAmount(e.target.value)}
+                                        required
+                                        placeholder="0.00"
                                     />
                                 </div>
+                                <p className="text-xs text-slate-500 mt-1.5">Enter the amount to add to the pool balance</p>
                             </div>
                             <div className="pt-4">
                                 <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-200 transition-all flex items-center justify-center gap-2"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -458,7 +462,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             )}
 
             {showExpense && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Add Expense</h2>
@@ -518,7 +522,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
             )}
 
             {showAddUser && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+                <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
                         <div className="flex justify-between items-center mb-6">
                             <h2 className="text-xl font-bold text-slate-900">Add Participant</h2>

@@ -1,37 +1,180 @@
 @import "tailwindcss";
 
+/* Light Mode (Default) */
 :root {
-  --background: #fafafa; /* slate-50 */
-  --foreground: #0f172a; /* slate-900 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #2563eb;
+  --border-color: #e2e8f0;
+}
+
+/* Dark Mode */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #e2e8f0;
+  --text-muted: #cbd5e1;
+  --accent-blue: #60a5fa;
+  --accent-blue-hover: #3b82f6;
+  --border-color: #334155;
 }
 
 @theme inline {
- --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px; /* Improved readability */
+  font-size: 16px;
   line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Better text contrast defaults */
-p, span, div, label {
-  color: #334155; /* slate-700 for better readability */
+/* Typography with high contrast - NO opacity reduction */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text-primary) !important;
+  font-weight: 700;
+  opacity: 1 !important;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--foreground);
+p,
+span,
+div,
+li,
+td,
+th,
+label {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* Secondary text - slightly less prominent but still visible */
+.text-slate-600 {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+.dark .text-slate-600 {
+  color: var(--text-secondary) !important;
+  opacity: 1 !important;
+}
+
+.text-slate-400 {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+.dark .text-slate-400 {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+/* Input fields - ensure full opacity */
+input,
+textarea,
+select {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+  opacity: 1 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7 !important;
+}
+
+/* Buttons - ensure text is always visible */
+button {
+  font-weight: 500;
+  opacity: 1 !important;
+}
+
+button * {
+  opacity: 1 !important;
+}
+
+/* Link text */
+a {
+  color: var(--accent-blue) !important;
+  opacity: 1 !important;
+}
+
+a:hover {
+  color: var(--accent-blue-hover) !important;
+}
+
+/* Force all text to be visible */
+.text-slate-100,
+.text-slate-200,
+.text-slate-300,
+.text-slate-700,
+.text-slate-800,
+.text-slate-900 {
+  opacity: 1 !important;
+}
+
+.dark .text-slate-100,
+.dark .text-slate-200,
+.dark .text-slate-300 {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+.dark .text-slate-700,
+.dark .text-slate-800,
+.dark .text-slate-900 {
+  color: var(--text-primary) !important;
+  opacity: 1 !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-blue);
+}
+
+/* Ensure all elements inherit proper color */
+.dark * {
+  border-color: var(--border-color);
+}
+
+/* Remove any opacity overrides that make text hard to read */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

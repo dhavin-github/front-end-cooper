@@ -80,7 +80,7 @@ router.post('/confirm', async (req, res) => {
 
         // 1. Check if already completed (Idempotency)
         const txn = await db.get(
-            'SELECT id, status, amount, user_id FROM transactions WHERE payment_reference = ?',
+            'SELECT id, status, amount, user_id, type FROM transactions WHERE payment_reference = ?',
             intentId
         );
 
@@ -93,9 +93,14 @@ router.post('/confirm', async (req, res) => {
             return res.json({ success: true, message: 'Already processed', amount: txn.amount });
         }
 
-        // 2. Call Finternet Service to Confirm (Escrow Proof)
-        // This will throw if the external API fails/rejects
-        await finternet.confirmPaymentIntent(intentId);
+        // 2. Delivery Proof Already Submitted by Frontend Callback
+        // Frontend /payment/callback page already called:
+        // POST /api/v1/payment-intents/{intentId}/escrow/delivery-proof
+        // So we SKIP the duplicate call here to avoid 500 errors
+
+        // REMOVED: await finternet.confirmPaymentIntent(intentId);
+        console.log('[PaymentRoute] ⏭️  Skipping Finternet call - proof already submitted by frontend');
+
 
         // 3. Update Database (Atomic Transaction)
         await db.run('BEGIN');
@@ -108,9 +113,21 @@ router.post('/confirm', async (req, res) => {
             );
 
             // Update Event Pool Balance based on transaction type
-            // DEPOSIT: Add to pool
-            // EXPENSE/REFUND: Deduct from pool
-            const balanceChange = txn.type === 'DEPOSIT' ? txn.amount : -txn.amount;
+            let balanceChange = 0;
+
+            if (txn.type === 'DEPOSIT') {
+                // FUND_POOL: ADD to pool
+                balanceChange = txn.amount;
+                console.log(`[PaymentRoute] 💰 DEPOSIT: Adding $${balanceChange} to pool`);
+            } else if (txn.type === 'EXPENSE') {
+                // PAY_EXPENSE: SUBTRACT from pool (expense paid from pool)
+                balanceChange = -txn.amount;
+                console.log(`[PaymentRoute] 💸 EXPENSE: Subtracting $${txn.amount} from pool`);
+            } else if (txn.type === 'REFUND') {
+                // REFUND_USER: SUBTRACT from pool (money leaving pool)
+                balanceChange = -txn.amount;
+                console.log(`[PaymentRoute] 💵 REFUND: Subtracting $${txn.amount} from pool`);
+            }
 
             await db.run(
                 'UPDATE events SET pool_balance = pool_balance + ? WHERE id = ?',
@@ -119,7 +136,7 @@ router.post('/confirm', async (req, res) => {
 
             await db.run('COMMIT');
 
-            console.log(`[PaymentRoute] ✅ Success. Type: ${txn.type}, Pool ${balanceChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(balanceChange)}`);
+            console.log(`[PaymentRoute] ✅ ${txn.type} Success. Pool changed by $${balanceChange}`);
             res.json({ success: true, amount: txn.amount, type: txn.type });
 
         } catch (dbErr) {
